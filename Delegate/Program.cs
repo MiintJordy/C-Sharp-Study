@@ -135,7 +135,72 @@ namespace Delegate
             }
             void afterclick(string sender)
             {
-                Console.WriteLine(sender + "afterclick 클릭!")
+                Console.WriteLine(sender + "afterclick 클릭!");
+            }
+        }
+    }
+
+    internal partial class Program 
+    {
+        delegate int A(String str);
+
+        class Temp
+        {
+            public event A EventHandler;
+
+            public void Func(string msg)
+            {
+                EventHandler(msg);
+            }
+        }
+    }
+
+    internal partial class Program
+    {
+        delegate void A(string sender);
+
+        class first
+        {
+            private string title;
+            public Label1(string name)
+            {
+                this.title = name;
+            }
+
+            // label의 텍스트가 변한다고 가정
+            public void run(string run_msg)
+            {
+                Console.WriteLine(run_msg + title + "에서 출력!");
+            }
+        }
+
+        class second
+        {
+            static void Main(string[] args)
+            {
+                Label lbl1 = new Label1("레이블1");
+                Label lbl2 = new Label1("레이블2");
+                Label lbl3 = new Label1("레이블3");
+                Label lbl4 = new Label1("레이블1");
+
+                button btn = new button();
+
+                btn.btn_EventHandler += lbl1.run;
+                btn.btn_EventHandler += lbl2.run;
+                btn.btn_EventHandler += lbl3.run;
+                btn.btn_EventHandler += lbl4.run;
+
+                btn.RunEvent();
+            }
+        }
+
+        class button
+        {
+            public event A btn_EventHandler;
+
+            public void RunEvent()
+            {
+                btn_EventHandler("이벤트 발생");
             }
         }
     }
