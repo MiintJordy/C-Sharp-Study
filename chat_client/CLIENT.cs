@@ -61,6 +61,7 @@ namespace chat_client
 
         private async void msg_btn_Click(object sender, EventArgs e)
         {
+            msg_display.AppendText("나 :" + msg_input.Text + Environment.NewLine);
             string message = "chamsg" + "/!@#$%/" + msg_input.Text;
             byte[] message_data = Encoding.UTF8.GetBytes(message);
             await stream.WriteAsync(message_data, 0, message_data.Length);
