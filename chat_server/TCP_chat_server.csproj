@@ -46,7 +46,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Class1.cs" />
+    <Compile Include="Server_Code.cs" />
     <Compile Include="SERVER.cs">
       <SubType>Form</SubType>
     </Compile>
