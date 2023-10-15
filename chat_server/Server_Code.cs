@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -18,7 +19,7 @@ namespace chat_server
         private TcpListener server_socket;
         private List<TcpClient> client_sockets = new List<TcpClient>();
         private List<NetworkStream> client_streams = new List<NetworkStream>();
-        private List<byte[]> buffers = new List<byte[]>();
+        private Dictionary<string, NetworkStream> connect_info = new Dictionary<string, NetworkStream>();
 
         public async void start_server()
         {
@@ -34,12 +35,12 @@ namespace chat_server
                     client_sockets.Add(client);
 
                     NetworkStream stream = client.GetStream();
-                    to_server_msg("클라이언트 접속 ");
                     client_streams.Add(stream);
+                    to_server_msg("클라이언트 접속 ");
                     byte[] buffer = new byte[1024];
-                    buffers.Add(buffer);
 
                     receive_data(stream, buffer);
+
                 }
             }
             catch (SocketException e)
@@ -54,42 +55,66 @@ namespace chat_server
 
         private async void receive_data(NetworkStream stream, byte[] buffer)
         {
-            int list_index = client_streams.IndexOf(stream);
-
             try
             {
-                while (true)
+                while (true) 
                 {
                     int byte_read = await stream.ReadAsync(buffer, 0, buffer.Length);
                     if (byte_read > 0)
                     {
                         string receive_msg = Encoding.UTF8.GetString(buffer, 0, byte_read);
                         string[] split_msg = receive_msg.Split(new string[] { "/!@#$%/" }, StringSplitOptions.None);
+                        foreach (string split in split_msg)
+                        {
+                            to_server_msg(split);
+                        }
 
-                        if (split_msg[0] == "chamsg")
+
+                        // 로그인 정보
+                        // split_msg[0] = login 데이터 구분자
+                        // split_msg[1] = 로그인 id
+                        if (split_msg[0] == "login")
+                        {
+                            connect_info.Add(split_msg[1], stream);
+                        }
+                        // chamsg split 정보
+                        // split_msg[0] = chamsg 데이터 구분자
+                        // split_msg[1] = 발신 id, split_msg[2] = 수신 id, split_msg[3] = 메시지 내용
+                        else if (split_msg[0] == "chamsg")
                         {
                             to_server_msg(split_msg[1]);
-
-                            string combinedMessage = $"{list_index}: {split_msg[1]}";
+                            string combinedMessage = $"{split_msg[1]}: {split_msg[3]}";
                             byte[] change_message = Encoding.UTF8.GetBytes(combinedMessage);
-                            foreach (NetworkStream idx in client_streams)
+
+                            NetworkStream self_stream;
+                            connect_info.TryGetValue(split_msg[1], out self_stream);
+                            if (split_msg[2] == "") 
                             {
-                                if (idx != stream)
+                                foreach (NetworkStream send_stream in connect_info.Values)
                                 {
-                                    await idx.WriteAsync(change_message, 0, change_message.Length);
+                                    if (send_stream != self_stream)
+                                    {
+                                        await send_stream.WriteAsync(change_message, 0, change_message.Length);
+                                    }
                                 }
+                            }
+                            else
+                            {
+                                NetworkStream select_stream;
+                                connect_info.TryGetValue(split_msg[2], out select_stream);
+                                await select_stream.WriteAsync(change_message, 0, change_message.Length);
                             }
                         }
                     }
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 // 클라이언트와의 연결이 끊어질 때 클라이언트 리스트에서 제거
-                client_sockets.RemoveAt(list_index);
-                client_streams.RemoveAt(list_index);
-                buffers.RemoveAt(list_index);
-                to_server_msg($"클라이언트 {list_index}와의 연결이 끊어졌습니다.");
+                //connect_info.Remove(list_index);
+                //connect_info.Remove(list_index);
+                //to_server_msg($"클라이언트와의 연결이 끊어졌습니다.");
+                to_server_msg(e.Message);
             }
         }
     }
