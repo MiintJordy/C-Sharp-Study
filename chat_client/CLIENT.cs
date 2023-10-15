@@ -44,11 +44,6 @@ namespace chat_client
             msg_input.Clear();
         }
 
-        private void file_btn_Click(object sender, EventArgs e)
-        {
-
-        }
-
         private void btn_connect_Click(object sender, EventArgs e)
         {
             my_id.ReadOnly = true;
@@ -56,6 +51,11 @@ namespace chat_client
             // 로그인 아이디 저장
             login_id = my_id.Text;
             client.Send_Message("login", login_id, "");
+        }
+        private void file_btn_Click(object sender, EventArgs e)
+        {
+            string file_user_info = login_id + "/!@#$%/" + user_id.Text;
+            client.Send_File("file", file_user_info);
         }
     }
 }
