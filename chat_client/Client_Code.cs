@@ -28,7 +28,6 @@ namespace chat_client
                 send_msg("서버 연결");
 
                 Readdata();
-                //Send_File();
             }
             catch (Exception e)
             {
@@ -68,13 +67,15 @@ namespace chat_client
 
             if (search_dialog.ShowDialog() == DialogResult.OK)
             {
-                try 
+                try
                 {
                     // 파일 이름을 포함한 경로
-                    string select_file_name = search_dialog.FileName;
-                    send_msg("선택 파일 :" + select_file_name);
+                    string select_file_path = search_dialog.FileName;
+                    send_msg("선택 파일 :" + select_file_path);
+                    // 파일 이름
+                    string select_file_name = Path.GetFileName(select_file_path);
                     // 파일의 크기
-                    long select_file_size = new FileInfo(select_file_name).Length;
+                    long select_file_size = new FileInfo(select_file_path).Length;
 
                     // 파일 정보 결합
                     string file_info = divide + "/!@#$%/" + who + "/!@#$%/" +
@@ -82,7 +83,7 @@ namespace chat_client
                     send_msg("파일 정보 :" + file_info);
 
                     // 파일 스트림 열기
-                    using (FileStream fileStream = new FileStream(select_file_name, FileMode.Open, FileAccess.Read))
+                    using (FileStream fileStream = new FileStream(select_file_path, FileMode.Open, FileAccess.Read))
                     {
                         // 서버 전송을 위한 형태 변환
                         byte[] message_data = Encoding.UTF8.GetBytes(file_info);
@@ -90,11 +91,18 @@ namespace chat_client
 
                         // 파일 전송
                         byte[] file_buffer = new byte[1024];
-                        int bytesRead;
+                        int read_file_byte;
+                        // 전송된 데이터 크기를 담을 변수
+                        long total_byte = 0;
 
-                        while ((bytesRead = fileStream.Read(file_buffer, 0, file_buffer.Length)) > 0)
+                        while ((read_file_byte = fileStream.Read(file_buffer, 0, file_buffer.Length)) > 0)
                         {
-                            stream.Write(file_buffer, 0, bytesRead);
+                            // file_buffer가 read_file_byte에 담긴 데이터를 읽어서 stream으로 전송
+                            stream.Write(file_buffer, 0, read_file_byte);
+
+                            // 전송된 바이트 수 업데이트
+                            total_byte += read_file_byte;
+                            send_msg("현재까지 전송된 파일 크기: " + total_byte);
                         }
                     }
                 }

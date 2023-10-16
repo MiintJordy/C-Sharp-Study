@@ -19,6 +19,7 @@ namespace chat_server
             InitializeComponent();
             Server_Code server = new Server_Code();
             server.to_server_msg += new Msg_Delivery(Append_Text_Func);
+            server.display_bar += new Trans_Delivery(Display_Progress_Func);
             server.start_server();
         }
 
@@ -30,6 +31,13 @@ namespace chat_server
         private void msg_btn_Click(object sender, EventArgs e)
         {
             msg_input.Clear();
+        }
+
+        private void Display_Progress_Func(long receive_size, long total_size)
+        {
+            progress_status.Maximum = 100;
+            long percent = (receive_size * 100) / total_size;
+            progress_status.Value = (int)percent;
         }
     }
 }
