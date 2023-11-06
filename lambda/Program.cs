@@ -16,6 +16,7 @@ namespace lambda
 
             // lambda.LambdaFunc(lambda.SayHello);
 
+            // 람다 사용
             lambda.LambdaFunc(() =>
             {
                 Console.WriteLine("Hello");
